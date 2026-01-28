@@ -1,4 +1,6 @@
 # 📦 spotcapture
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/it-atelier-gn/spotcapture)
+
 Capture network packets until a stop event is received and upload PCAP file with captured packages to an S3 bucket.
 
 ## ✨ Features
