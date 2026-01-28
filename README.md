@@ -1,4 +1,6 @@
 # 📦 spotcapture
+[![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)](#)
+[![macOS](https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=F0F0F0)](#)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/it-atelier-gn/spotcapture)
 
 Capture network packets until a stop event is received and upload PCAP file with captured packages to an S3 bucket.
