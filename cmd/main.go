@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"spotcapture/internal/buffer"
 	"spotcapture/internal/capture"
+	"spotcapture/internal/stop"
 	"spotcapture/internal/storage"
 	"spotcapture/internal/upload"
 	"syscall"
@@ -27,16 +28,18 @@ func LoadConfig() error {
 func main() {
 	log.Print("Spotcapture: loading config...")
 
-	LoadConfig()
+	if err := LoadConfig(); err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 
-	stopChan := make(chan struct{})
+	stopper := stop.New()
 	ring := buffer.NewRingBuffer(1000)
 
 	log.Print("Spotcapture: starting capturing...")
-	go capture.StartCapture(viper.GetString("interface"), ring, stopChan)
+	go capture.StartCapture(viper.GetString("interface"), ring, stopper.Done())
 
-	go listenTCP(viper.GetInt("port"), stopChan)
-	go listenUDP(viper.GetInt("port"), stopChan)
+	go listenTCP(viper.GetInt("port"), stopper)
+	go listenUDP(viper.GetInt("port"), stopper)
 
 	log.Print("Spotcapture: capturing in progress")
 
@@ -46,11 +49,11 @@ func main() {
 	select {
 	case <-sigChan:
 		log.Print("Spotcapture: Stopping due to signal")
-	case <-stopChan:
+	case <-stopper.Done():
 		log.Print("Spotcapture: Stopping due to TCP/UDP trigger")
 	}
 
-	log.Print("Spotcapture: Sapturing stopped")
+	log.Print("Spotcapture: Capturing stopped")
 
 	packets := ring.Packets()
 	pcap, err := storage.SaveRingBufferToPcapBuffer(packets)
@@ -68,7 +71,7 @@ func main() {
 	log.Println("Spotcapture: Upload complete!")
 }
 
-func listenTCP(port int, stopChan chan struct{}) {
+func listenTCP(port int, stopper *stop.Stopper) {
 	addr := fmt.Sprintf(":%d", port)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -81,12 +84,12 @@ func listenTCP(port int, stopChan chan struct{}) {
 	conn, err := listener.Accept()
 	if err == nil {
 		log.Printf("Spotcapture: TCP connection detected from %s", conn.RemoteAddr())
-		close(stopChan)
+		stopper.Stop()
 		conn.Close()
 	}
 }
 
-func listenUDP(port int, stopChan chan struct{}) {
+func listenUDP(port int, stopper *stop.Stopper) {
 	addr := fmt.Sprintf(":%d", port)
 	conn, err := net.ListenPacket("udp", addr)
 	if err != nil {
@@ -100,6 +103,6 @@ func listenUDP(port int, stopChan chan struct{}) {
 	_, remoteAddr, err := conn.ReadFrom(buf)
 	if err == nil {
 		log.Printf("Spotcapture: UDP packet detected from %s", remoteAddr)
-		close(stopChan)
+		stopper.Stop()
 	}
 }

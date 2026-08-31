@@ -35,6 +35,15 @@ proxy: "http://proxy"    # Optional HTTP proxy URL
 CGO_ENABLED=0 go build -o spotcapture cmd/main.go
 ```
 
+## Test
+
+```bash
+go test -race ./...
+```
+
+CI runs build, `gofmt`, `go vet`, tests, and `govulncheck` on every push and
+pull request against `main`.
+
 ## How It Works
 1. Loads configuration from `config.yml`
 2. Starts packet capture on the specified network interface
