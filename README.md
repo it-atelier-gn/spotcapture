@@ -53,6 +53,6 @@ pull request against `main`.
 6. Uploads PCAP file to S3 bucket with timestamp
 
 ## Requirements
-* Go 1.16 or later
+* Go 1.27 or later
 * Network interface access (may require elevated privileges)
 * AWS credentials with S3 write permissions
